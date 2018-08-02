@@ -5,9 +5,6 @@
 #include <float.h>
 #include <time.h>
 
-// gcc binary_integer_linear_programming.c -o binary_integer_linear_programming -lm -g
-// valgrind --leak-check=full --show-leak-kinds=all -v ./binary_integer_linear_programming
-
 int maximization_problem = 1; // default is maximization
 double epsilon = 0.000000001; // the maximum allowed calculation error when determining integers
 
