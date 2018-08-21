@@ -1,6 +1,6 @@
 # c_mixed_integer_linear_programming
 
-This project is a rational mixed integer linear programming solver written in C that can be used to build custom mixed integer linear programming optimization models for many applications.
+This project is a rational mixed integer linear programming solver written in C using the simplex method and branch and bound that can be used to build custom mixed integer linear programming optimization models for many applications.
 
 
 ## Inputs
