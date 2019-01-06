@@ -2087,7 +2087,7 @@ struct BranchAndBoundState CreateBranchAndBoundState(unsigned int number_of_cons
 	} // end of k loop
 	
 	return branch_and_bound_state;
-} // end of PushBranchAndBoundStateToStack function
+} // end of CreateBranchAndBoundState function
 
 /* This function deletes a branch and bound state from the stack */
 void DeleteBranchAndBoundStateFromStack(unsigned int *recursion_level, struct BranchAndBoundState *branch_and_bound_state_stack)
