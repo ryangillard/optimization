@@ -137,7 +137,7 @@ int BranchAndBoundMILP(int maximization_problem, unsigned int *number_of_constra
 void CountNumberOfVariablesNeedingToBeIntegerOrBinaryThatAlreadyAre(unsigned int number_of_variables, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, long long **basic_feasible_solution, unsigned int *number_of_variables_needing_to_be_integer_or_binary_currently_integer_or_binary, unsigned int *last_variable_that_still_needs_to_become_integer_or_binary_index);
 
 /* This function recursively applies branch and bound */
-int BranchAndBoundMILPIterative(int maximization_problem, unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ****tableau_matrix, unsigned int **basic_variables, long long ***basic_feasible_solution, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index, double *best_mixed_integer_optimal_value_double, long long *best_mixed_integer_optimal_value, long long **best_mixed_integer_variable_values, int *best_milp_error_code, struct BranchAndBoundState *branch_and_bound_state_stack, struct BranchAndBoundAddConstraintStackNode *branch_and_bound_add_constraint_stack);
+int BranchAndBoundMILPIterative(int maximization_problem, unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ****tableau_matrix, unsigned int **basic_variables, long long ***basic_feasible_solution, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index, double *best_mixed_integer_optimal_value_double, long long *best_mixed_integer_optimal_value, long long **best_mixed_integer_variable_values, int *best_milp_error_code);
 
 /* This function pushes constraints to add in branch and bound to stack */
 void PushBranchAndBoundAddConstraintToStack(unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index, double last_variable_that_still_needs_to_become_integer_value, unsigned int recursion_level, unsigned int *constraint_stack_count, struct BranchAndBoundAddConstraintStackNode *branch_and_bound_add_constraint_stack);
@@ -159,6 +159,9 @@ int BranchAndBoundMILPIterativeLessOrGreaterThan(int maximization_problem, unsig
 
 /* This function checks if more recursion of MILP branch and bound is necessary */
 void CheckIfMoreBranchAndBoundMILPRecursionIsNecessary(int maximization_problem, unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int number_of_artificial_variables, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int *tableau_current_size, double best_mixed_integer_optimal_value_double, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index_recursive, unsigned int *constraint_stack_count, struct BranchAndBoundAddConstraintStackNode *branch_and_bound_add_constraint_stack, unsigned int *recursion_level, struct BranchAndBoundState *branch_and_bound_state_stack);
+
+/* This function continues down the rabbit hole of the branch and bound enumeration tree */
+void ContinueDownRabbitHole(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int number_of_artificial_variables, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int *tableau_current_size, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index_recursive, unsigned int *constraint_stack_count, struct BranchAndBoundAddConstraintStackNode *branch_and_bound_add_constraint_stack, unsigned int *recursion_level, struct BranchAndBoundState *branch_and_bound_state_stack);
 
 /* This function saves the best mixed integer optimal variables and values */
 void SaveBestMixedIntegerOptimalVariablesAndValues(int maximization_problem, unsigned int number_of_constraints, unsigned int number_of_variables, long long **basic_feasible_solution, long long ***tableau_matrix, double *best_mixed_integer_optimal_value_double, long long *best_mixed_integer_optimal_value, long long **best_mixed_integer_variable_values, int *best_milp_error_code);
@@ -247,7 +250,6 @@ int main(int argc, char *argv[])
 
 	ReadConstraintCoefficientMatrix(number_of_constraints, number_of_variables, &constraint_coefficient_matrix);
 
-
 	/*********************************************************************************/
 	/******************************** OPTIMAL VALUES *********************************/
 	/*********************************************************************************/
@@ -258,7 +260,6 @@ int main(int argc, char *argv[])
 	long long **optimal_variable_values;
 
 	CreateOptimalObjectiveFunctionAndVariableValues(maximization_problem, number_of_variables, optimal_objective_function_value, &optimal_variable_values);
-
 
 	/*********************************************************************************/
 	/*********************** MIXED INTEGER LINEAR PROGRAMMING ************************/
@@ -1836,14 +1837,8 @@ int BranchAndBoundMILP(int maximization_problem, unsigned int *number_of_constra
 
 		printf("BranchAndBoundMILP: number_of_variables_required_to_be_integer = %u, number_of_variables_required_to_be_binary = %u, number_of_variables_needing_to_be_integer_or_binary_currently_integer_or_binary = %u, last_variable_that_still_needs_to_become_integer_or_binary_index = %u, best_mixed_integer_optimal_value_double = %lf\n", number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, number_of_variables_needing_to_be_integer_or_binary_currently_integer_or_binary, last_variable_that_still_needs_to_become_integer_or_binary_index, best_mixed_integer_optimal_value_double);
 		
-		struct BranchAndBoundState *branch_and_bound_state_stack;
-		branch_and_bound_state_stack = malloc(sizeof(struct BranchAndBoundState) * (max_recursion_depth + 1));
-		
-		struct BranchAndBoundAddConstraintStackNode *branch_and_bound_add_constraint_stack;
-		branch_and_bound_add_constraint_stack = malloc(sizeof(struct BranchAndBoundAddConstraintStackNode) * (max_recursion_depth + 2));
-
 		/* Call recursive branch and bound function */
-		error_code = BranchAndBoundMILPIterative(maximization_problem, number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_matrix, basic_variables, basic_feasible_solution, tableau_current_size, tableau_max_size, number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, last_variable_that_still_needs_to_become_integer_or_binary_index, &best_mixed_integer_optimal_value_double, best_mixed_integer_optimal_value, best_mixed_integer_variable_values, &best_milp_error_code, branch_and_bound_state_stack, branch_and_bound_add_constraint_stack);
+		error_code = BranchAndBoundMILPIterative(maximization_problem, number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_matrix, basic_variables, basic_feasible_solution, tableau_current_size, tableau_max_size, number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, last_variable_that_still_needs_to_become_integer_or_binary_index, &best_mixed_integer_optimal_value_double, best_mixed_integer_optimal_value, best_mixed_integer_variable_values, &best_milp_error_code);
 
 		error_code = best_milp_error_code;
 
@@ -1872,9 +1867,6 @@ int BranchAndBoundMILP(int maximization_problem, unsigned int *number_of_constra
 		}
 
 		/* Free dynamic memory */
-		free(branch_and_bound_add_constraint_stack);
-		free(branch_and_bound_state_stack);
-		
 		for (k = 0; k < 2; k++)
 		{
 			free(best_mixed_integer_variable_values[k]);
@@ -1955,13 +1947,18 @@ void CountNumberOfVariablesNeedingToBeIntegerOrBinaryThatAlreadyAre(unsigned int
 } // end of CountNumberOfVariablesNeedingToBeIntegerOrBinaryThatAlreadyAre function
 
 /* This function recursively applies branch and bound */
-int BranchAndBoundMILPIterative(int maximization_problem, unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ****tableau_matrix, unsigned int **basic_variables, long long ***basic_feasible_solution, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index, double *best_mixed_integer_optimal_value_double, long long *best_mixed_integer_optimal_value, long long **best_mixed_integer_variable_values, int *best_milp_error_code, struct BranchAndBoundState *branch_and_bound_state_stack, struct BranchAndBoundAddConstraintStackNode *branch_and_bound_add_constraint_stack)
+int BranchAndBoundMILPIterative(int maximization_problem, unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ****tableau_matrix, unsigned int **basic_variables, long long ***basic_feasible_solution, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index, double *best_mixed_integer_optimal_value_double, long long *best_mixed_integer_optimal_value, long long **best_mixed_integer_variable_values, int *best_milp_error_code)
 {
-	unsigned int i, j, k;
 	int error_code = 0;
 	
 	unsigned int constraint_stack_count = 0;
 	unsigned int recursion_level = 0;
+	
+	struct BranchAndBoundState *branch_and_bound_state_stack;
+	branch_and_bound_state_stack = malloc(sizeof(struct BranchAndBoundState) * (max_recursion_depth + 1));
+	
+	struct BranchAndBoundAddConstraintStackNode *branch_and_bound_add_constraint_stack;
+	branch_and_bound_add_constraint_stack = malloc(sizeof(struct BranchAndBoundAddConstraintStackNode) * (max_recursion_depth + 2));
 
 	/* This will be the value that we try next for the corresponding variable */
 	double last_variable_that_still_needs_to_become_integer_value = (double)(*basic_feasible_solution)[0][last_variable_that_still_needs_to_become_integer_or_binary_index] / (*basic_feasible_solution)[1][last_variable_that_still_needs_to_become_integer_or_binary_index];
@@ -1990,6 +1987,10 @@ int BranchAndBoundMILPIterative(int maximization_problem, unsigned int *number_o
 		
 		error_code = BranchAndBoundMILPIterativeLessOrGreaterThan(maximization_problem, number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_matrix, basic_variables, basic_feasible_solution, tableau_current_size, tableau_max_size, number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, best_mixed_integer_optimal_value_double, best_mixed_integer_optimal_value, best_mixed_integer_variable_values, best_milp_error_code, new_constraint.variable_index, new_constraint.constraint_inequality_direction, new_constraint.constraint_constant, &constraint_stack_count, branch_and_bound_add_constraint_stack, &recursion_level, branch_and_bound_state_stack);
 	}
+	
+	/* Free dynamic memory */
+	free(branch_and_bound_add_constraint_stack);
+	free(branch_and_bound_state_stack);
 	
 	return error_code;
 } // end of BranchAndBoundMILPIterative function
@@ -2193,18 +2194,7 @@ void CheckIfMoreBranchAndBoundMILPRecursionIsNecessary(int maximization_problem,
 			if ((double)tableau_matrix[0][number_of_constraints][0] / tableau_matrix[1][number_of_constraints][0] > best_mixed_integer_optimal_value_double)
 			{
 				/* Keep going down the rabbit hole */
-				printf("CheckIfMoreBranchAndBoundMILPRecursionIsNecessary: Going down rabbit hole more at current recursion_level = %d\n", (*recursion_level));
-				
-				(*recursion_level)++;
-
-				/* This will be the value that we try next for the corresponding variable */
-				double last_variable_that_still_needs_to_become_integer_value = (double)basic_feasible_solution[0][last_variable_that_still_needs_to_become_integer_or_binary_index_recursive] / basic_feasible_solution[1][last_variable_that_still_needs_to_become_integer_or_binary_index_recursive];
-				
-				/* Push onto add constraint stack */
-				PushBranchAndBoundAddConstraintToStack(last_variable_that_still_needs_to_become_integer_or_binary_index_recursive, last_variable_that_still_needs_to_become_integer_value, (*recursion_level), constraint_stack_count, branch_and_bound_add_constraint_stack);
-				
-				/* Push onto state stack */
-				PushBranchAndBoundStateToStack(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_current_size, basic_variables, basic_feasible_solution, tableau_matrix, (*recursion_level), branch_and_bound_state_stack);
+				ContinueDownRabbitHole(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size, last_variable_that_still_needs_to_become_integer_or_binary_index_recursive, constraint_stack_count, branch_and_bound_add_constraint_stack, recursion_level, branch_and_bound_state_stack);
 			}
 		}
 		else
@@ -2212,24 +2202,30 @@ void CheckIfMoreBranchAndBoundMILPRecursionIsNecessary(int maximization_problem,
 			if (-(double)tableau_matrix[0][number_of_constraints][0] / tableau_matrix[1][number_of_constraints][0] < best_mixed_integer_optimal_value_double)
 			{
 				/* Keep going down the rabbit hole */
-				printf("CheckIfMoreBranchAndBoundMILPRecursionIsNecessary: Going down rabbit hole more at current recursion_level = %d\n", (*recursion_level));
-				
-				(*recursion_level)++;
-				
-				/* This will be the value that we try next for the corresponding variable */
-				double last_variable_that_still_needs_to_become_integer_value = (double)basic_feasible_solution[0][last_variable_that_still_needs_to_become_integer_or_binary_index_recursive] / basic_feasible_solution[1][last_variable_that_still_needs_to_become_integer_or_binary_index_recursive];
-				
-				/* Push onto add constraint stack */
-				PushBranchAndBoundAddConstraintToStack(last_variable_that_still_needs_to_become_integer_or_binary_index_recursive, last_variable_that_still_needs_to_become_integer_value, (*recursion_level), constraint_stack_count, branch_and_bound_add_constraint_stack);
-				
-				/* Push onto state stack */
-				PushBranchAndBoundStateToStack(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_current_size, basic_variables, basic_feasible_solution, tableau_matrix, (*recursion_level), branch_and_bound_state_stack);
+				ContinueDownRabbitHole(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size, last_variable_that_still_needs_to_become_integer_or_binary_index_recursive, constraint_stack_count, branch_and_bound_add_constraint_stack, recursion_level, branch_and_bound_state_stack);
 			}
 		}
 	}
 	
 	return;
 } // end of CheckIfMoreBranchAndBoundMILPRecursionIsNecessary function
+
+/* This function continues down the rabbit hole of the branch and bound enumeration tree */
+void ContinueDownRabbitHole(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int number_of_artificial_variables, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int *tableau_current_size, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index_recursive, unsigned int *constraint_stack_count, struct BranchAndBoundAddConstraintStackNode *branch_and_bound_add_constraint_stack, unsigned int *recursion_level, struct BranchAndBoundState *branch_and_bound_state_stack)
+{
+	printf("CheckIfMoreBranchAndBoundMILPRecursionIsNecessary: Going down rabbit hole more at current recursion_level = %d\n", (*recursion_level));
+	
+	(*recursion_level)++;
+
+	/* This will be the value that we try next for the corresponding variable */
+	double last_variable_that_still_needs_to_become_integer_value = (double)basic_feasible_solution[0][last_variable_that_still_needs_to_become_integer_or_binary_index_recursive] / basic_feasible_solution[1][last_variable_that_still_needs_to_become_integer_or_binary_index_recursive];
+	
+	/* Push onto add constraint stack */
+	PushBranchAndBoundAddConstraintToStack(last_variable_that_still_needs_to_become_integer_or_binary_index_recursive, last_variable_that_still_needs_to_become_integer_value, (*recursion_level), constraint_stack_count, branch_and_bound_add_constraint_stack);
+	
+	/* Push onto state stack */
+	PushBranchAndBoundStateToStack(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_current_size, basic_variables, basic_feasible_solution, tableau_matrix, (*recursion_level), branch_and_bound_state_stack);
+}
 
 /* This function saves the best mixed integer optimal variables and values */
 void SaveBestMixedIntegerOptimalVariablesAndValues(int maximization_problem, unsigned int number_of_constraints, unsigned int number_of_variables, long long **basic_feasible_solution, long long ***tableau_matrix, double *best_mixed_integer_optimal_value_double, long long *best_mixed_integer_optimal_value, long long **best_mixed_integer_variable_values, int *best_milp_error_code)
