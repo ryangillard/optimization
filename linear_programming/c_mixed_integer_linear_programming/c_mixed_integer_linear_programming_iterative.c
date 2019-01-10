@@ -5,7 +5,7 @@
 #include <float.h>
 #include <time.h>
 
-unsigned int max_recursion_depth = 6;
+unsigned int max_branch_and_bound_recursion_depth = 6;
 
 /*********************************************************************************************************/
 /********************************************** STRUCTURES ***********************************************/
@@ -93,13 +93,13 @@ void CreateBasicVariables(unsigned int number_of_constraints, unsigned int numbe
 void CreateBasicFeasibleSolution(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int number_of_artificial_variables, long long ***tableau_matrix, unsigned int *basic_variables, long long ***basic_feasible_solution);
 
 /* This function writes to disk the initial MILP array values */
-void WriteInitialLPValues(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int number_of_artificial_variables, unsigned int *tableau_current_size, long long ***tableau_matrix, unsigned int *basic_variables, long long **basic_feasible_solution);
+void WriteInitialLPValues(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int number_of_artificial_variables, unsigned int *tableau_current_size, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix);
 
 /* This function prints the initial constraint, variable, etc. counts */
 void PrintInitialCounts(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_less_than_or_equal_to_constraints, unsigned int number_of_equal_to_constraints, unsigned int number_of_greater_than_or_equal_to_constraints, unsigned int number_of_slack_surplus_variables, unsigned int number_of_artificial_variables, unsigned int *tableau_current_size);
 
 /* This function writes to disk the final LP array values */
-void WriteFinalLPValues(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int number_of_artificial_variables, unsigned int *tableau_current_size, long long ***tableau_matrix, unsigned int *basic_variables, long long **basic_feasible_solution);
+void WriteFinalLPValues(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int number_of_artificial_variables, unsigned int *tableau_current_size, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix);
 
 /* This function writes to disk the final MILP array values */
 void WriteFinalMILPValues(unsigned int number_of_variables, long long *optimal_objective_function_value, long long **optimal_variable_values);
@@ -112,13 +112,13 @@ void UpdateOptimalObjectiveFunctionAndVariableSolution(unsigned int number_of_va
 /*********************************************************************************/
 
 /* This function finds the optimal solution for the given variables and constraints */
-int SimplexAlgorithm(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ***tableau_matrix, unsigned int *basic_variables, long long **basic_feasible_solution, unsigned int *tableau_current_size);
+int SimplexAlgorithm(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int *tableau_current_size);
 
 /* This function transforms the tableau by removing artificial variables to obtain a basic feasible solution */
-int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ***tableau_matrix, unsigned int *basic_variables, long long **basic_feasible_solution, unsigned int *tableau_current_size);
+int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int *tableau_current_size);
 
 /* This function starts from an basic feasible solution and iterates toward the optimal solution */
-int SimplexPhase2(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, long long ***tableau_matrix, unsigned int *basic_variables, long long **basic_feasible_solution, unsigned int *tableau_current_size);
+int SimplexPhase2(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int *tableau_current_size);
 
 /* This function performs Gauss-Jordan Elimination on the pivot column */
 void PivotColumnGaussJordanElimnation(unsigned int number_of_rows, unsigned int number_of_columns, unsigned int pivot_row_index, unsigned int pivot_col_index, long long *pivot_value, long long ***tableau_matrix);
@@ -131,13 +131,13 @@ void UpdateBasicFeasibleSolution(unsigned int number_of_total_variables, unsigne
 /*********************************************************************************/
 
 /* This function initiates the branch and bound */
-int BranchAndBoundMILP(int maximization_problem, unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ****tableau_matrix, unsigned int **basic_variables, long long ***basic_feasible_solution, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, long long *optimal_objective_function_value, long long **optimal_variable_values, long long **objective_function_coefficient_vector, int lp_error_code);
+int BranchAndBoundMILP(int maximization_problem, unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int **basic_variables, long long ***basic_feasible_solution, long long ****tableau_matrix, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, long long *optimal_objective_function_value, long long **optimal_variable_values, long long **objective_function_coefficient_vector, int lp_error_code);
 
 /* This function counts the number of variables that need to be integer or binary AND already are */
 void CountNumberOfVariablesNeedingToBeIntegerOrBinaryThatAlreadyAre(unsigned int number_of_variables, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, long long **basic_feasible_solution, unsigned int *number_of_variables_needing_to_be_integer_or_binary_currently_integer_or_binary, unsigned int *last_variable_that_still_needs_to_become_integer_or_binary_index);
 
-/* This function recursively applies branch and bound */
-int BranchAndBoundMILPIterative(int maximization_problem, unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ****tableau_matrix, unsigned int **basic_variables, long long ***basic_feasible_solution, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index, double *best_mixed_integer_optimal_value_double, long long *best_mixed_integer_optimal_value, long long **best_mixed_integer_variable_values, int *best_milp_error_code);
+/* This function iteratively applies branch and bound */
+void BranchAndBoundMILPIterative(int maximization_problem, unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int **basic_variables, long long ***basic_feasible_solution, long long ****tableau_matrix, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index, double *best_mixed_integer_optimal_value_double, long long *best_mixed_integer_optimal_value, long long **best_mixed_integer_variable_values, int *best_milp_error_code);
 
 /* This function pushes constraints to add in branch and bound to stack */
 void PushBranchAndBoundAddConstraintToStack(unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index, double last_variable_that_still_needs_to_become_integer_value, unsigned int recursion_level, unsigned int *constraint_stack_count, struct BranchAndBoundAddConstraintStackNode *branch_and_bound_add_constraint_stack);
@@ -155,7 +155,7 @@ struct BranchAndBoundState CreateBranchAndBoundState(unsigned int number_of_cons
 void DeleteBranchAndBoundStateFromStack(unsigned int *recursion_level, struct BranchAndBoundState *branch_and_bound_state_stack);
 
 /* This function handles the less than or greater than branches of the recursive tree of branch and bound */
-int BranchAndBoundMILPIterativeLessOrGreaterThan(int maximization_problem, unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ****tableau_matrix, unsigned int **basic_variables, long long ***basic_feasible_solution, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, double *best_mixed_integer_optimal_value_double, long long *best_mixed_integer_optimal_value, long long **best_mixed_integer_variable_values, int *best_milp_error_code, unsigned int new_constraint_variable_index, int new_constraint_inequality_direction, int new_constraint_constant, unsigned int *constraint_stack_count, struct BranchAndBoundAddConstraintStackNode *branch_and_bound_add_constraint_stack, unsigned int *recursion_level, struct BranchAndBoundState *branch_and_bound_state_stack);
+void BranchAndBoundMILPIterativeLessOrGreaterThan(int maximization_problem, unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int **basic_variables, long long ***basic_feasible_solution, long long ****tableau_matrix, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, double *best_mixed_integer_optimal_value_double, long long *best_mixed_integer_optimal_value, long long **best_mixed_integer_variable_values, int *best_milp_error_code, unsigned int new_constraint_variable_index, int new_constraint_inequality_direction, int new_constraint_constant, unsigned int *constraint_stack_count, struct BranchAndBoundAddConstraintStackNode *branch_and_bound_add_constraint_stack, unsigned int *recursion_level, struct BranchAndBoundState *branch_and_bound_state_stack);
 
 /* This function checks if more recursion of MILP branch and bound is necessary */
 void CheckIfMoreBranchAndBoundMILPRecursionIsNecessary(int maximization_problem, unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int number_of_artificial_variables, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int *tableau_current_size, double best_mixed_integer_optimal_value_double, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index_recursive, unsigned int *constraint_stack_count, struct BranchAndBoundAddConstraintStackNode *branch_and_bound_add_constraint_stack, unsigned int *recursion_level, struct BranchAndBoundState *branch_and_bound_state_stack);
@@ -167,10 +167,10 @@ void ContinueDownRabbitHole(unsigned int number_of_constraints, unsigned int num
 void SaveBestMixedIntegerOptimalVariablesAndValues(int maximization_problem, unsigned int number_of_constraints, unsigned int number_of_variables, long long **basic_feasible_solution, long long ***tableau_matrix, double *best_mixed_integer_optimal_value_double, long long *best_mixed_integer_optimal_value, long long **best_mixed_integer_variable_values, int *best_milp_error_code);
 
 /* This function resets the counts and arrays during recursive branch and bound MILP */
-void ResetBranchAndBoundMILPIterativeCountsAndArrays(unsigned int number_of_variables, unsigned int *tableau_current_size, unsigned int *number_of_constraints, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ***basic_feasible_solution, unsigned int **basic_variables, long long ****tableau_matrix, unsigned int recursion_level, struct BranchAndBoundState *branch_and_bound_state_stack);
+void ResetBranchAndBoundMILPIterativeCountsAndArrays(unsigned int number_of_variables, unsigned int *tableau_current_size, unsigned int *number_of_constraints, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int **basic_variables, long long ***basic_feasible_solution, long long ****tableau_matrix, unsigned int recursion_level, struct BranchAndBoundState *branch_and_bound_state_stack);
 
 /* This function adds a constraint to the previous optimal solution (warm-start) */
-int AddConstraint(unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ****tableau_matrix, unsigned int **basic_variables, long long ***basic_feasible_solution, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index, int new_constraint_inequality_direction, long long new_constraint_constant, unsigned int recursion_level);
+int AddConstraint(unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int **basic_variables, long long ***basic_feasible_solution, long long ****tableau_matrix, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index, int new_constraint_inequality_direction, long long new_constraint_constant, unsigned int recursion_level);
 
 /*********************************************************************************/
 /******************************* HELPER FUNCTIONS ********************************/
@@ -776,7 +776,7 @@ int MixedIntegerLinearProgramming(int maximization_problem, unsigned int *number
 
 	CreateBasicFeasibleSolution((*number_of_constraints), number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_matrix, basic_variables, &basic_feasible_solution);
 
-	WriteInitialLPValues((*number_of_constraints), number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_current_size, tableau_matrix, basic_variables, basic_feasible_solution);
+	WriteInitialLPValues((*number_of_constraints), number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_current_size, basic_variables, basic_feasible_solution, tableau_matrix);
 
 	PrintInitialCounts((*number_of_constraints), number_of_variables, number_of_less_than_or_equal_to_constraints, number_of_equal_to_constraints, number_of_greater_than_or_equal_to_constraints, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_current_size);
 
@@ -785,9 +785,9 @@ int MixedIntegerLinearProgramming(int maximization_problem, unsigned int *number
 	/* Solve LP Relaxation */
 
 	/* This function finds the optimal solution for the given variables and constraints */
-	error_code = SimplexAlgorithm((*number_of_constraints), number_of_variables, number_of_slack_surplus_variables, &number_of_artificial_variables, tableau_matrix, basic_variables, basic_feasible_solution, &tableau_current_size[0]);
+	error_code = SimplexAlgorithm((*number_of_constraints), number_of_variables, number_of_slack_surplus_variables, &number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, &tableau_current_size[0]);
 
-	WriteFinalLPValues((*number_of_constraints), number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_current_size, tableau_matrix, basic_variables, basic_feasible_solution);
+	WriteFinalLPValues((*number_of_constraints), number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_current_size, basic_variables, basic_feasible_solution, tableau_matrix);
 
 	if (error_code == 0) // if LP is optimal then MILP will be either infeasible or optimal
 	{
@@ -809,7 +809,7 @@ int MixedIntegerLinearProgramming(int maximization_problem, unsigned int *number
 			printf("************************************************************************************************************\n");
 			printf("************************************************************************************************************\n\n\n");
 
-			error_code = BranchAndBoundMILP(maximization_problem, number_of_constraints, number_of_variables, &number_of_slack_surplus_variables, &number_of_artificial_variables, &tableau_matrix, &basic_variables, &basic_feasible_solution, &tableau_current_size[0], &tableau_max_size[0], number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, optimal_objective_function_value, optimal_variable_values, objective_function_coefficient_vector, error_code);
+			error_code = BranchAndBoundMILP(maximization_problem, number_of_constraints, number_of_variables, &number_of_slack_surplus_variables, &number_of_artificial_variables, &basic_variables, &basic_feasible_solution, &tableau_matrix, &tableau_current_size[0], &tableau_max_size[0], number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, optimal_objective_function_value, optimal_variable_values, objective_function_coefficient_vector, error_code);
 
 			if (error_code == 0)
 			{
@@ -852,7 +852,7 @@ int MixedIntegerLinearProgramming(int maximization_problem, unsigned int *number
 			printf("************************************************************************************************************\n");
 			printf("************************************************************************************************************\n\n\n");
 
-			error_code = BranchAndBoundMILP(maximization_problem, number_of_constraints, number_of_variables, &number_of_slack_surplus_variables, &number_of_artificial_variables, &tableau_matrix, &basic_variables, &basic_feasible_solution, &tableau_current_size[0], &tableau_max_size[0], number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, optimal_objective_function_value, optimal_variable_values, objective_function_coefficient_vector, error_code);
+			error_code = BranchAndBoundMILP(maximization_problem, number_of_constraints, number_of_variables, &number_of_slack_surplus_variables, &number_of_artificial_variables, &basic_variables, &basic_feasible_solution, &tableau_matrix, &tableau_current_size[0], &tableau_max_size[0], number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, optimal_objective_function_value, optimal_variable_values, objective_function_coefficient_vector, error_code);
 
 			if (error_code == 0)
 			{
@@ -1194,7 +1194,7 @@ void CreateBasicFeasibleSolution(unsigned int number_of_constraints, unsigned in
 } // end of CreateBasicFeasibleSolution function
 
 /* This function writes to disk the initial LP array values */
-void WriteInitialLPValues(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int number_of_artificial_variables, unsigned int *tableau_current_size, long long ***tableau_matrix, unsigned int *basic_variables, long long **basic_feasible_solution)
+void WriteInitialLPValues(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int number_of_artificial_variables, unsigned int *tableau_current_size, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix)
 {
 	unsigned int i, j;
 
@@ -1242,7 +1242,7 @@ void PrintInitialCounts(unsigned int number_of_constraints, unsigned int number_
 } // end of PrintInitialCounts function
 
 /* This function writes to disk the final LP array values */
-void WriteFinalLPValues(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int number_of_artificial_variables, unsigned int *tableau_current_size, long long ***tableau_matrix, unsigned int *basic_variables, long long **basic_feasible_solution)
+void WriteFinalLPValues(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int number_of_artificial_variables, unsigned int *tableau_current_size, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix)
 {
 	unsigned int i, j;
 
@@ -1321,7 +1321,7 @@ void UpdateOptimalObjectiveFunctionAndVariableSolution(unsigned int number_of_va
 /*********************************************************************************/
 
 /* This function finds the optimal solution for the given variables and constraints */
-int SimplexAlgorithm(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ***tableau_matrix, unsigned int *basic_variables, long long **basic_feasible_solution, unsigned int *tableau_current_size)
+int SimplexAlgorithm(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int *tableau_current_size)
 {
 	unsigned int i, k;
 	int error_code = 0;
@@ -1333,7 +1333,7 @@ int SimplexAlgorithm(unsigned int number_of_constraints, unsigned int number_of_
 	if ((*number_of_artificial_variables) > 0)
 	{
 		/* This function transforms the tableau by removing artificial variables to obtain a basic feasible solution */
-		error_code = SimplexPhase1(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_matrix, basic_variables, basic_feasible_solution, tableau_current_size);
+		error_code = SimplexPhase1(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size);
 		tableau_current_size[0]--; // decrement current rows since we've eliminated artificial objective function row
 	}
 
@@ -1344,7 +1344,7 @@ int SimplexAlgorithm(unsigned int number_of_constraints, unsigned int number_of_
 	if (error_code == 0)
 	{
 		/* This function starts from an basic feasible solution and iterates toward the optimal solution */
-		error_code = SimplexPhase2(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, tableau_matrix, basic_variables, basic_feasible_solution, tableau_current_size);
+		error_code = SimplexPhase2(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size);
 	}
 
 	/*********************************************************************************/
@@ -1360,7 +1360,7 @@ int SimplexAlgorithm(unsigned int number_of_constraints, unsigned int number_of_
 } // end of SimplexAlgorithm function
 
 /* This function transforms the tableau by removing artificial variables to obtain a basic feasible solution */
-int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ***tableau_matrix, unsigned int *basic_variables, long long **basic_feasible_solution, unsigned int *tableau_current_size)
+int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int *tableau_current_size)
 {
 	unsigned int i, j, k, l;
 	int error_code = 0;
@@ -1577,7 +1577,7 @@ int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_var
 } // end of SimplexPhase1 function
 
 /* This function starts from an basic feasible solution and iterates toward the optimal solution */
-int SimplexPhase2(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, long long ***tableau_matrix, unsigned int *basic_variables, long long **basic_feasible_solution, unsigned int *tableau_current_size)
+int SimplexPhase2(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int *tableau_current_size)
 {
 	int i, j, k, l, error_code = 0;
 	double old_optimum = -DBL_MAX;
@@ -1794,7 +1794,7 @@ void UpdateBasicFeasibleSolution(unsigned int number_of_total_variables, unsigne
 /*********************************************************************************/
 
 /* This function initiates the branch and bound */
-int BranchAndBoundMILP(int maximization_problem, unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ****tableau_matrix, unsigned int **basic_variables, long long ***basic_feasible_solution, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, long long *optimal_objective_function_value, long long **optimal_variable_values, long long **objective_function_coefficient_vector, int lp_error_code)
+int BranchAndBoundMILP(int maximization_problem, unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int **basic_variables, long long ***basic_feasible_solution, long long ****tableau_matrix, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, long long *optimal_objective_function_value, long long **optimal_variable_values, long long **objective_function_coefficient_vector, int lp_error_code)
 {
 	unsigned int i, j, k, number_of_variables_needing_to_be_integer_or_binary_currently_integer_or_binary = 0, last_variable_that_still_needs_to_become_integer_or_binary_index = 0;
 	int error_code = 0;
@@ -1837,8 +1837,8 @@ int BranchAndBoundMILP(int maximization_problem, unsigned int *number_of_constra
 
 		printf("BranchAndBoundMILP: number_of_variables_required_to_be_integer = %u, number_of_variables_required_to_be_binary = %u, number_of_variables_needing_to_be_integer_or_binary_currently_integer_or_binary = %u, last_variable_that_still_needs_to_become_integer_or_binary_index = %u, best_mixed_integer_optimal_value_double = %lf\n", number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, number_of_variables_needing_to_be_integer_or_binary_currently_integer_or_binary, last_variable_that_still_needs_to_become_integer_or_binary_index, best_mixed_integer_optimal_value_double);
 		
-		/* Call recursive branch and bound function */
-		error_code = BranchAndBoundMILPIterative(maximization_problem, number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_matrix, basic_variables, basic_feasible_solution, tableau_current_size, tableau_max_size, number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, last_variable_that_still_needs_to_become_integer_or_binary_index, &best_mixed_integer_optimal_value_double, best_mixed_integer_optimal_value, best_mixed_integer_variable_values, &best_milp_error_code);
+		/* Call iterative branch and bound function */
+		BranchAndBoundMILPIterative(maximization_problem, number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size, tableau_max_size, number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, last_variable_that_still_needs_to_become_integer_or_binary_index, &best_mixed_integer_optimal_value_double, best_mixed_integer_optimal_value, best_mixed_integer_variable_values, &best_milp_error_code);
 
 		error_code = best_milp_error_code;
 
@@ -1946,19 +1946,17 @@ void CountNumberOfVariablesNeedingToBeIntegerOrBinaryThatAlreadyAre(unsigned int
 	return;
 } // end of CountNumberOfVariablesNeedingToBeIntegerOrBinaryThatAlreadyAre function
 
-/* This function recursively applies branch and bound */
-int BranchAndBoundMILPIterative(int maximization_problem, unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ****tableau_matrix, unsigned int **basic_variables, long long ***basic_feasible_solution, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index, double *best_mixed_integer_optimal_value_double, long long *best_mixed_integer_optimal_value, long long **best_mixed_integer_variable_values, int *best_milp_error_code)
+/* This function iteratively applies branch and bound */
+void BranchAndBoundMILPIterative(int maximization_problem, unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int **basic_variables, long long ***basic_feasible_solution, long long ****tableau_matrix, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index, double *best_mixed_integer_optimal_value_double, long long *best_mixed_integer_optimal_value, long long **best_mixed_integer_variable_values, int *best_milp_error_code)
 {
-	int error_code = 0;
-	
 	unsigned int constraint_stack_count = 0;
 	unsigned int recursion_level = 0;
 	
 	struct BranchAndBoundState *branch_and_bound_state_stack;
-	branch_and_bound_state_stack = malloc(sizeof(struct BranchAndBoundState) * (max_recursion_depth + 1));
+	branch_and_bound_state_stack = malloc(sizeof(struct BranchAndBoundState) * (max_branch_and_bound_recursion_depth + 1));
 	
 	struct BranchAndBoundAddConstraintStackNode *branch_and_bound_add_constraint_stack;
-	branch_and_bound_add_constraint_stack = malloc(sizeof(struct BranchAndBoundAddConstraintStackNode) * (max_recursion_depth + 2));
+	branch_and_bound_add_constraint_stack = malloc(sizeof(struct BranchAndBoundAddConstraintStackNode) * (max_branch_and_bound_recursion_depth + 2));
 
 	/* This will be the value that we try next for the corresponding variable */
 	double last_variable_that_still_needs_to_become_integer_value = (double)(*basic_feasible_solution)[0][last_variable_that_still_needs_to_become_integer_or_binary_index] / (*basic_feasible_solution)[1][last_variable_that_still_needs_to_become_integer_or_binary_index];
@@ -1976,6 +1974,7 @@ int BranchAndBoundMILPIterative(int maximization_problem, unsigned int *number_o
 		/* Pop off top constraint to add from constraint stack */
 		new_constraint = PopNewConstraintFromBranchAndBoundAddConstraintStack(&constraint_stack_count, branch_and_bound_add_constraint_stack);
 		
+		/* Evaluate new constraint */
 		if (new_constraint.constraint_inequality_direction == 1)
 		{
 			printf("BranchAndBoundMILPIterative: About to add constraint x%u <= %d\n", new_constraint.variable_index + 1, new_constraint.constraint_constant);
@@ -1985,14 +1984,14 @@ int BranchAndBoundMILPIterative(int maximization_problem, unsigned int *number_o
 			printf("BranchAndBoundMILPIterative: About to add constraint x%u >= %d\n", new_constraint.variable_index + 1, new_constraint.constraint_constant);
 		}
 		
-		error_code = BranchAndBoundMILPIterativeLessOrGreaterThan(maximization_problem, number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_matrix, basic_variables, basic_feasible_solution, tableau_current_size, tableau_max_size, number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, best_mixed_integer_optimal_value_double, best_mixed_integer_optimal_value, best_mixed_integer_variable_values, best_milp_error_code, new_constraint.variable_index, new_constraint.constraint_inequality_direction, new_constraint.constraint_constant, &constraint_stack_count, branch_and_bound_add_constraint_stack, &recursion_level, branch_and_bound_state_stack);
+		BranchAndBoundMILPIterativeLessOrGreaterThan(maximization_problem, number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size, tableau_max_size, number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, best_mixed_integer_optimal_value_double, best_mixed_integer_optimal_value, best_mixed_integer_variable_values, best_milp_error_code, new_constraint.variable_index, new_constraint.constraint_inequality_direction, new_constraint.constraint_constant, &constraint_stack_count, branch_and_bound_add_constraint_stack, &recursion_level, branch_and_bound_state_stack);
 	}
 	
 	/* Free dynamic memory */
 	free(branch_and_bound_add_constraint_stack);
 	free(branch_and_bound_state_stack);
 	
-	return error_code;
+	return;
 } // end of BranchAndBoundMILPIterative function
 
 /* This function pushes constraints to add in branch and bound to stack */
@@ -2030,10 +2029,10 @@ struct BranchAndBoundAddConstraintStackNode PopNewConstraintFromBranchAndBoundAd
 /* This function pushes branch and bound state to the stack */
 void PushBranchAndBoundStateToStack(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int number_of_artificial_variables, unsigned int *tableau_current_size, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int recursion_level, struct BranchAndBoundState *branch_and_bound_state_stack)
 {
-	if (recursion_level < max_recursion_depth + 1)
+	if (recursion_level < max_branch_and_bound_recursion_depth + 1)
 	{
 		printf("PushBranchAndBoundStateToStack: Pushing onto stack at recursion_level = %u\n", recursion_level);
-		branch_and_bound_state_stack[recursion_level++] = CreateBranchAndBoundState(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_current_size, basic_variables, basic_feasible_solution, tableau_matrix);
+		branch_and_bound_state_stack[recursion_level] = CreateBranchAndBoundState(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_current_size, basic_variables, basic_feasible_solution, tableau_matrix);
 	}
 	else
 	{
@@ -2117,7 +2116,7 @@ void DeleteBranchAndBoundStateFromStack(unsigned int *recursion_level, struct Br
 } // end of DeleteBranchAndBoundStateFromStack function
 
 /* This function handles the less than or greater than branches of the recursive tree of branch and bound */
-int BranchAndBoundMILPIterativeLessOrGreaterThan(int maximization_problem, unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ****tableau_matrix, unsigned int **basic_variables, long long ***basic_feasible_solution, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, double *best_mixed_integer_optimal_value_double, long long *best_mixed_integer_optimal_value, long long **best_mixed_integer_variable_values, int *best_milp_error_code, unsigned int new_constraint_variable_index, int new_constraint_inequality_direction, int new_constraint_constant, unsigned int *constraint_stack_count, struct BranchAndBoundAddConstraintStackNode *branch_and_bound_add_constraint_stack, unsigned int *recursion_level, struct BranchAndBoundState *branch_and_bound_state_stack)
+void BranchAndBoundMILPIterativeLessOrGreaterThan(int maximization_problem, unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int **basic_variables, long long ***basic_feasible_solution, long long ****tableau_matrix, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int number_of_variables_required_to_be_integer, unsigned int number_of_variables_required_to_be_binary, int *variable_special_requirements, double *best_mixed_integer_optimal_value_double, long long *best_mixed_integer_optimal_value, long long **best_mixed_integer_variable_values, int *best_milp_error_code, unsigned int new_constraint_variable_index, int new_constraint_inequality_direction, int new_constraint_constant, unsigned int *constraint_stack_count, struct BranchAndBoundAddConstraintStackNode *branch_and_bound_add_constraint_stack, unsigned int *recursion_level, struct BranchAndBoundState *branch_and_bound_state_stack)
 {
 	int error_code;
 
@@ -2130,7 +2129,7 @@ int BranchAndBoundMILPIterativeLessOrGreaterThan(int maximization_problem, unsig
 		printf("BranchAndBoundMILPIterativeLessOrGreaterThan: About to add constraint x%u >= %d at recursion_level %u\n", new_constraint_variable_index + 1, new_constraint_constant, (*recursion_level));
 	}
 	
-	error_code = AddConstraint(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, tableau_matrix, basic_variables, basic_feasible_solution, tableau_current_size, tableau_max_size, new_constraint_variable_index, new_constraint_inequality_direction, new_constraint_constant, (*recursion_level));
+	error_code = AddConstraint(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size, tableau_max_size, new_constraint_variable_index, new_constraint_inequality_direction, new_constraint_constant, (*recursion_level));
 
 	if (error_code == 0)
 	{
@@ -2168,26 +2167,41 @@ int BranchAndBoundMILPIterativeLessOrGreaterThan(int maximization_problem, unsig
 	if (new_constraint_inequality_direction == 1) // if less than or equal to
 	{
 		printf("BranchAndBoundMILPIterativeLessOrGreaterThan: <=: About to reset counts and arrays at recursion_level = %u!\n", (*recursion_level));
-		ResetBranchAndBoundMILPIterativeCountsAndArrays(number_of_variables, tableau_current_size, number_of_constraints, number_of_slack_surplus_variables, number_of_artificial_variables, basic_feasible_solution, basic_variables, tableau_matrix, (*recursion_level), branch_and_bound_state_stack);
+		ResetBranchAndBoundMILPIterativeCountsAndArrays(number_of_variables, tableau_current_size, number_of_constraints, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, (*recursion_level), branch_and_bound_state_stack);
 	}
 	else
 	{
 		if ((*recursion_level) > 0)
 		{
 			printf("BranchAndBoundMILPIterativeLessOrGreaterThan: >=: About to reset counts and arrays at recursion_level = %u!\n", (*recursion_level));
-			ResetBranchAndBoundMILPIterativeCountsAndArrays(number_of_variables, tableau_current_size, number_of_constraints, number_of_slack_surplus_variables, number_of_artificial_variables, basic_feasible_solution, basic_variables, tableau_matrix, (*recursion_level) - 1, branch_and_bound_state_stack);
+			ResetBranchAndBoundMILPIterativeCountsAndArrays(number_of_variables, tableau_current_size, number_of_constraints, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, (*recursion_level) - 1, branch_and_bound_state_stack);
 		}
 		
 		DeleteBranchAndBoundStateFromStack(recursion_level, branch_and_bound_state_stack);
 	}
 	
-	return error_code;
+	unsigned int i, j, k;
+	printf("BranchAndBoundMILPIterativeLessOrGreaterThan: Leaving function: tableau_matrix = \n");
+	for (k = 0; k < 2; k++)
+	{
+		for (i = 0; i < tableau_current_size[0]; i++)
+		{
+			for (j = 0; j < tableau_current_size[0]; j++)
+			{
+				printf("%lld\t", (*tableau_matrix)[k][i][j]);
+			} // end of j loop
+			printf("\n");
+		} // end of i loop
+		printf("\n");
+	} // end of k loop
+
+	return;
 } // end of BranchAndBoundMILPIterativeLessOrGreaterThan function
 
 /* This function checks if more recursion of MILP branch and bound is necessary */
 void CheckIfMoreBranchAndBoundMILPRecursionIsNecessary(int maximization_problem, unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int number_of_artificial_variables, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int *tableau_current_size, double best_mixed_integer_optimal_value_double, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index_recursive, unsigned int *constraint_stack_count, struct BranchAndBoundAddConstraintStackNode *branch_and_bound_add_constraint_stack, unsigned int *recursion_level, struct BranchAndBoundState *branch_and_bound_state_stack)
 {
-	if ((*recursion_level) < max_recursion_depth)
+	if ((*recursion_level) < max_branch_and_bound_recursion_depth)
 	{
 		if (maximization_problem == 1)
 		{
@@ -2273,7 +2287,7 @@ void SaveBestMixedIntegerOptimalVariablesAndValues(int maximization_problem, uns
 } // end of SaveBestMixedIntegerOptimalVariablesAndValues function
 
 /* This function resets the counts and arrays during recursive branch and bound MILP */
-void ResetBranchAndBoundMILPIterativeCountsAndArrays(unsigned int number_of_variables, unsigned int *tableau_current_size, unsigned int *number_of_constraints, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ***basic_feasible_solution, unsigned int **basic_variables, long long ****tableau_matrix, unsigned int recursion_level, struct BranchAndBoundState *branch_and_bound_state_stack)
+void ResetBranchAndBoundMILPIterativeCountsAndArrays(unsigned int number_of_variables, unsigned int *tableau_current_size, unsigned int *number_of_constraints, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int **basic_variables, long long ***basic_feasible_solution, long long ****tableau_matrix, unsigned int recursion_level, struct BranchAndBoundState *branch_and_bound_state_stack)
 {
 	unsigned int i, j, k;
 	
@@ -2337,7 +2351,7 @@ void ResetBranchAndBoundMILPIterativeCountsAndArrays(unsigned int number_of_vari
 } // end of ResetBranchAndBoundMILPIterativeCountsAndArrays function
 
 /* This function adds a constraint to the previous optimal solution (warm-start) */
-int AddConstraint(unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, long long ****tableau_matrix, unsigned int **basic_variables, long long ***basic_feasible_solution, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index, int new_constraint_inequality_direction, long long new_constraint_constant, unsigned int recursion_level)
+int AddConstraint(unsigned int *number_of_constraints, unsigned int number_of_variables, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int **basic_variables, long long ***basic_feasible_solution, long long ****tableau_matrix, unsigned int *tableau_current_size, unsigned int *tableau_max_size, unsigned int last_variable_that_still_needs_to_become_integer_or_binary_index, int new_constraint_inequality_direction, long long new_constraint_constant, unsigned int recursion_level)
 {
 	unsigned int i, j;
 	int error_code;
@@ -2354,6 +2368,16 @@ int AddConstraint(unsigned int *number_of_constraints, unsigned int number_of_va
 	}
 
 	printf("AddConstraint: Tableau: Current = %u x %u & Max = %u x %u\n", tableau_current_size[0], tableau_current_size[1], tableau_max_size[0], tableau_max_size[1]);
+	
+	printf("AddConstraint: Just entered, tableau matrix\n");
+	for (i = 0; i < tableau_current_size[0]; i++)
+	{
+		for (j = 0; j < tableau_current_size[1]; j++)
+		{
+			printf("%lf\t", (double)(*tableau_matrix)[0][i][j] / (*tableau_matrix)[1][i][j]);
+		} // end of j loop
+		printf("\n");
+	} // end of i loop
 
 	/* Increase matrix array size if needed */
 	if (tableau_current_size[0] + 2 > tableau_max_size[0]) // if need to realloc rows
@@ -2503,7 +2527,7 @@ int AddConstraint(unsigned int *number_of_constraints, unsigned int number_of_va
 	} // end of i loop
 
 	/* This function finds the optimal solution for the given variables and constraints */
-	error_code = SimplexAlgorithm((*number_of_constraints), number_of_variables, (*number_of_slack_surplus_variables), number_of_artificial_variables, (*tableau_matrix), (*basic_variables), (*basic_feasible_solution), tableau_current_size);
+	error_code = SimplexAlgorithm((*number_of_constraints), number_of_variables, (*number_of_slack_surplus_variables), number_of_artificial_variables, (*basic_variables), (*basic_feasible_solution), (*tableau_matrix), tableau_current_size);
 	
 	printf("AddConstraint: Tableau right AFTER simplex: Current = %u x %u & Max = %u x %u\n", tableau_current_size[0], tableau_current_size[1], tableau_max_size[0], tableau_max_size[1]);
 	
