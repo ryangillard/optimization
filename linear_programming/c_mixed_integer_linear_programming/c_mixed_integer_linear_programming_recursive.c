@@ -107,10 +107,10 @@ void UpdateOptimalObjectiveFunctionAndVariableSolution(unsigned int number_of_va
 int SimplexAlgorithm(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int *tableau_current_size);
 
 /* This function transforms the tableau by removing artificial variables to obtain a basic feasible solution */
-int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int *tableau_current_size);
+int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int *basic_variables, long long ***tableau_matrix, unsigned int *tableau_current_size);
 
 /* This function starts from an basic feasible solution and iterates toward the optimal solution */
-int SimplexPhase2(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int *tableau_current_size);
+int SimplexPhase2(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *basic_variables, long long ***tableau_matrix, unsigned int *tableau_current_size);
 
 /* This function performs Gauss-Jordan Elimination on the pivot column */
 void PivotColumnGaussJordanElimnation(unsigned int number_of_rows, unsigned int number_of_columns, unsigned int pivot_row_index, unsigned int pivot_col_index, long long *pivot_value, long long ***tableau_matrix);
@@ -1312,7 +1312,7 @@ int SimplexAlgorithm(unsigned int number_of_constraints, unsigned int number_of_
 	if ((*number_of_artificial_variables) > 0)
 	{
 		/* This function transforms the tableau by removing artificial variables to obtain a basic feasible solution */
-		error_code = SimplexPhase1(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size);
+		error_code = SimplexPhase1(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, tableau_matrix, tableau_current_size);
 		tableau_current_size[0]--; // decrement current rows since we've eliminated artificial objective function row
 	}
 
@@ -1323,7 +1323,7 @@ int SimplexAlgorithm(unsigned int number_of_constraints, unsigned int number_of_
 	if (error_code == 0)
 	{
 		/* This function starts from an basic feasible solution and iterates toward the optimal solution */
-		error_code = SimplexPhase2(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size);
+		error_code = SimplexPhase2(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, basic_variables, tableau_matrix, tableau_current_size);
 	}
 
 	/*********************************************************************************/
@@ -1339,20 +1339,12 @@ int SimplexAlgorithm(unsigned int number_of_constraints, unsigned int number_of_
 } // end of SimplexAlgorithm function
 
 /* This function transforms the tableau by removing artificial variables to obtain a basic feasible solution */
-int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int *tableau_current_size)
+int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int *basic_variables, long long ***tableau_matrix, unsigned int *tableau_current_size)
 {
 	unsigned int i, j, k, l;
 	int error_code = 0;
 
 	/* PHASE I (first find the feasible region) */
-	printf("SimplexPhase1: Just entered function\n");
-	
-	printf("SimplexPhase1: basic_variables = \n");
-	for (i = 0; i < number_of_constraints; i++)
-	{
-		printf("%u\n", basic_variables[i]);
-	} // end of i loop
-	printf("\n");
 
 	/* Remove artificial variables from objective function */
 	unsigned int artificial_variable_col_index = 0;
@@ -1364,8 +1356,6 @@ int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_var
 		{
 			if (tableau_matrix[0][i][artificial_variable_col_index] == 1 && tableau_matrix[1][i][artificial_variable_col_index] == 1) // if this is the kth artificial variable's row
 			{
-				printf("SimplexPhase1: artificial_variable_col_index = %u, artificial_variable_row_index = %u\n", artificial_variable_col_index, i);
-				
 				for (j = 0; j < tableau_current_size[1]; j++)
 				{
 					LongLongRationalAddition(tableau_matrix[0][number_of_constraints + 1][j], tableau_matrix[1][number_of_constraints + 1][j], tableau_matrix[0][i][j], tableau_matrix[1][i][j], &tableau_matrix[0][number_of_constraints + 1][j], &tableau_matrix[1][number_of_constraints + 1][j]);
@@ -1375,9 +1365,6 @@ int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_var
 			} // end of if this is the kth artificial variable's row
 		} // end of i loop
 	} // end of k loop
-	
-	/* Update Basic Feasible Solution */
-	UpdateBasicFeasibleSolution(tableau_current_size[1] - 1, tableau_current_size[0] - 2, basic_variables, basic_feasible_solution, tableau_matrix);
 
 	/* Count initial number of positive elements in the objective function row */
 	unsigned int number_of_positive_objective_function_elements = 0;
@@ -1389,8 +1376,6 @@ int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_var
 		}
 	} // end of j loop
 	
-	printf("SimplexPhase1: number_of_positive_objective_function_elements = %u\n", number_of_positive_objective_function_elements);
-
 	unsigned int most_positive_objective_function_element_index = 0, smallest_non_negative_ratio_index = 0, smallest_artificial_variable_non_negative_ratio_index = 0, pivot_col_index = 0, pivot_row_index = 0;
 	double most_positive_objective_function_element_value = 0, b_a_ratio_double = 0;
 
@@ -1426,13 +1411,9 @@ int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_var
 			}
 		} // end of j loop
 
-		printf("SimplexPhase1: most_positive_objective_function_element_value = %lf, most_positive_objective_function_element_index = %u\n", most_positive_objective_function_element_value, most_positive_objective_function_element_index);
-		
 		if (most_positive_objective_function_element_value > 0) // if a pivot column was found
 		{
 			pivot_col_index = most_positive_objective_function_element_index;
-
-//			printf("SimplexPhase1: Pivot column is %u because of value %.32f\n", pivot_col_index, most_positive_objective_function_element_value);
 
 			/* Search for smallest non negative ratio of bi / aij which will be departing variable */
 			smallest_non_negative_ratio_index = 0;
@@ -1447,7 +1428,6 @@ int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_var
 			{
 				if (tableau_matrix[0][i][pivot_col_index] > 0) // pivot element needs to be positive
 				{
-//					b_a_ratio = ((double)tableau_matrix[0][i][0] / tableau_matrix[1][i][0]) / ((double)tableau_matrix[0][i][pivot_col_index] / tableau_matrix[1][i][pivot_col_index]);
 					LongLongRationalDivision(tableau_matrix[0][i][0], tableau_matrix[1][i][0], tableau_matrix[0][i][pivot_col_index], tableau_matrix[1][i][pivot_col_index], &b_a_ratio[0], &b_a_ratio[1]);
 					
 					b_a_ratio_double = (double)b_a_ratio[0] / b_a_ratio[1];
@@ -1471,9 +1451,6 @@ int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_var
 				}
 			} // end of i loop
 			
-			printf("SimplexPhase1: smallest_non_negative_ratio_index = %u, smallest_non_negative_ratio_value = %.16f\n", smallest_non_negative_ratio_index, (double)smallest_non_negative_ratio_value[0] / smallest_non_negative_ratio_value[1]);
-			printf("SimplexPhase1: smallest_artificial_variable_non_negative_ratio_index = %u, smallest_artificial_variable_non_negative_ratio_value = %.16f\n", smallest_artificial_variable_non_negative_ratio_index, (double)smallest_artificial_variable_non_negative_ratio_value[0] / smallest_artificial_variable_non_negative_ratio_value[1]);
-
 			if (!(smallest_non_negative_ratio_value[0] == LLONG_MAX && smallest_non_negative_ratio_value[1] == 1)) // if pivot row was found
 			{
 				/* IF LOWEST RATIO OCCURS BOTH IN AN ARTIFICIAL VARIABLE ROW AND A NON-NEGATIVE VARIABLE ROW THEN MUST CHOOSE PIVOT ROW AS NON-NEGATIVE VARIABLE ROW */
@@ -1502,10 +1479,6 @@ int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_var
 
 				pivot_value[0] = tableau_matrix[0][pivot_row_index][pivot_col_index];
 				pivot_value[1] = tableau_matrix[1][pivot_row_index][pivot_col_index];
-				
-				printf("SimplexPhase1: pivot_row_index = %u, pivot_col_index = %u, pivot_value = %.32f\n", pivot_row_index, pivot_col_index, (double)pivot_value[0] / pivot_value[1]);
-				
-				printf("SimplexPhase1: basic_variables[pivot_row_index] = %u, number_of_variables + number_of_slack_surplus_variables = %u, (*number_of_artificial_variables) = %u\n", basic_variables[pivot_row_index], number_of_variables + number_of_slack_surplus_variables, (*number_of_artificial_variables));
 
 				if (basic_variables[pivot_row_index] >= number_of_variables + number_of_slack_surplus_variables) // if basic variable is an artificial variable
 				{
@@ -1519,9 +1492,6 @@ int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_var
 				/* This function performs Gauss-Jordan Elimination on the pivot column */
 				PivotColumnGaussJordanElimnation(tableau_current_size[0], tableau_current_size[1], pivot_row_index, pivot_col_index, pivot_value, tableau_matrix);
 
-				/* This function updates the basic feasible solution */
-				UpdateBasicFeasibleSolution(tableau_current_size[1] - 1, tableau_current_size[0] - 2, basic_variables, basic_feasible_solution, tableau_matrix);
-
 				/* Count again the number of variables that are positive still */
 				number_of_positive_objective_function_elements = 0;
 				for (j = 0; j < (tableau_current_size[1] - 1); j++)
@@ -1532,7 +1502,7 @@ int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_var
 					}
 				} // end of j loop
 
-				printf("SimplexPhase1: BREAKPOINT! iteration = %u, number_of_positive_objective_function_elements = %u & (*number_of_artificial_variables) = %u\n", iteration, number_of_positive_objective_function_elements, (*number_of_artificial_variables));
+//				printf("SimplexPhase1: BREAKPOINT! iteration = %u, number_of_positive_objective_function_elements = %u & (*number_of_artificial_variables) = %u\n", iteration, number_of_positive_objective_function_elements, (*number_of_artificial_variables));
 				iteration++;
 			} // end of if pivot row was found
 			else
@@ -1556,13 +1526,12 @@ int SimplexPhase1(unsigned int number_of_constraints, unsigned int number_of_var
 } // end of SimplexPhase1 function
 
 /* This function starts from an basic feasible solution and iterates toward the optimal solution */
-int SimplexPhase2(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *basic_variables, long long **basic_feasible_solution, long long ***tableau_matrix, unsigned int *tableau_current_size)
+int SimplexPhase2(unsigned int number_of_constraints, unsigned int number_of_variables, unsigned int number_of_slack_surplus_variables, unsigned int *basic_variables, long long ***tableau_matrix, unsigned int *tableau_current_size)
 {
 	int i, j, k, l, error_code = 0;
 	double old_optimum = -DBL_MAX;
 
 	/* PHASE II (find the optimal solution in the feasible region we found above) */
-	printf("SimplexPhase2: Just entered function\n");
 
 	/* Count initial number of negative elements in the objective function row */
 	unsigned int number_of_negative_objective_function_elements = 0;
@@ -1603,8 +1572,6 @@ int SimplexPhase2(unsigned int number_of_constraints, unsigned int number_of_var
 		{
 			pivot_col_index = most_negative_objective_function_element_index;
 
-//			printf("SimplexPhase2: Pivot column is %u because of value %lf\n", pivot_col_index, most_negative_objective_function_element_value);
-
 			/* Check to see if the problem is unbounded */
 			number_of_positive_elements = 0;
 			for (i = 0; i < (tableau_current_size[0] - 1); i++)
@@ -1642,16 +1609,11 @@ int SimplexPhase2(unsigned int number_of_constraints, unsigned int number_of_var
 					pivot_value[0] = tableau_matrix[0][pivot_row_index][pivot_col_index];
 					pivot_value[1] = tableau_matrix[1][pivot_row_index][pivot_col_index];
 
-//					printf("SimplexPhase2: Pivot row is %u because of ratio %lf / %lf = %lf\n", pivot_row_index, (double)tableau_matrix[0][pivot_row_index][0] / tableau_matrix[1][pivot_row_index][0], (double)tableau_matrix[0][pivot_row_index][pivot_col_index] / tableau_matrix[1][pivot_row_index][pivot_col_index], smallest_non_negative_ratio_value);
-
 					/* Remove departing variable from and add entering variable to basic variables */
 					basic_variables[pivot_row_index] = pivot_col_index;
 
 					/* This function performs Gauss-Jordan Elimination on the pivot column */
 					PivotColumnGaussJordanElimnation(tableau_current_size[0], tableau_current_size[1], pivot_row_index, pivot_col_index, pivot_value, tableau_matrix);
-
-					/* This function updates the basic feasible solution */
-					UpdateBasicFeasibleSolution(tableau_current_size[1] - 1, tableau_current_size[0] - 1, basic_variables, basic_feasible_solution, tableau_matrix);
 
 					/* Count new number of negative elements in the objective function row */
 					number_of_negative_objective_function_elements = 0;
@@ -1814,8 +1776,6 @@ int BranchAndBoundMILP(int maximization_problem, unsigned int *number_of_constra
 			best_mixed_integer_variable_values[1][i] = 1;
 		} // end of i loop
 
-		printf("BranchAndBoundMILP: number_of_variables_required_to_be_integer = %u, number_of_variables_required_to_be_binary = %u, number_of_variables_needing_to_be_integer_or_binary_currently_integer_or_binary = %u, last_variable_that_still_needs_to_become_integer_or_binary_index = %u, best_mixed_integer_optimal_value_double = %lf\n", number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, number_of_variables_needing_to_be_integer_or_binary_currently_integer_or_binary, last_variable_that_still_needs_to_become_integer_or_binary_index, best_mixed_integer_optimal_value_double);
-
 		/* Call recursive branch and bound function */
 		error_code = BranchAndBoundMILPRecursive(maximization_problem, number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size, tableau_max_size, number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, last_variable_that_still_needs_to_become_integer_or_binary_index, &best_mixed_integer_optimal_value_double, best_mixed_integer_optimal_value, best_mixed_integer_variable_values, &best_milp_error_code, 0);
 
@@ -1942,14 +1902,12 @@ int BranchAndBoundMILPRecursive(int maximization_problem, unsigned int *number_o
 	/*********************************** LESS THAN ***********************************/
 	/*********************************************************************************/
 
-	printf("BranchAndBoundMILPRecursive: About to do less than branch at recursion_level = %u\n", recursion_level);
 	BranchAndBoundMILPRecursiveLessOrGreaterThan(maximization_problem, number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size, tableau_max_size, number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, last_variable_that_still_needs_to_become_integer_or_binary_index, last_variable_that_still_needs_to_become_integer_value, best_mixed_integer_optimal_value_double, best_mixed_integer_optimal_value, best_mixed_integer_variable_values, best_milp_error_code, branch_and_bound_state_old, 1, recursion_level);
 
 	/*********************************************************************************/
 	/********************************* GREATER THAN **********************************/
 	/*********************************************************************************/
 
-	printf("BranchAndBoundMILPRecursive: About to do greater than branch at recursion_level = %u\n", recursion_level);
 	BranchAndBoundMILPRecursiveLessOrGreaterThan(maximization_problem, number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size, tableau_max_size, number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, last_variable_that_still_needs_to_become_integer_or_binary_index, last_variable_that_still_needs_to_become_integer_value, best_mixed_integer_optimal_value_double, best_mixed_integer_optimal_value, best_mixed_integer_variable_values, best_milp_error_code, branch_and_bound_state_old, -1, recursion_level);
 
 	/* Free dynamic memory */
@@ -2021,13 +1979,11 @@ int BranchAndBoundMILPRecursiveLessOrGreaterThan(int maximization_problem, unsig
 	if (new_constraint_inequality_direction == 1) // less than
 	{
 		/* Last_variable_that_still_needs_to_become_integer_or_binary_index <= new_constraint_constant */
-		printf("BranchAndBoundMILPRecursiveLessOrGreaterThan: About to add less than constraint\n");
 		error_code = AddConstraint(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size, tableau_max_size, last_variable_that_still_needs_to_become_integer_or_binary_index, new_constraint_inequality_direction, (long long)floor(last_variable_that_still_needs_to_become_integer_value), recursion_level);
 	}
 	else // greater than
 	{
 		/* Last_variable_that_still_needs_to_become_integer_or_binary_index >= new_constraint_constant */
-		printf("BranchAndBoundMILPRecursiveLessOrGreaterThan: About to add greater than constraint\n");
 		error_code = AddConstraint(number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size, tableau_max_size, last_variable_that_still_needs_to_become_integer_or_binary_index, new_constraint_inequality_direction, (long long)ceil(last_variable_that_still_needs_to_become_integer_value), recursion_level);
 	}
 
@@ -2035,18 +1991,15 @@ int BranchAndBoundMILPRecursiveLessOrGreaterThan(int maximization_problem, unsig
 	{
 		unsigned int number_of_variables_needing_to_be_integer_or_binary_currently_integer_or_binary = 0, last_variable_that_still_needs_to_become_integer_or_binary_index_recursive = 0;
 
-		printf("BranchAndBoundMILPRecursiveLessOrGreaterThan: About to count remaining variables\n");
 		CountNumberOfVariablesNeedingToBeIntegerOrBinaryThatAlreadyAre(number_of_variables, number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, (*basic_feasible_solution), &number_of_variables_needing_to_be_integer_or_binary_currently_integer_or_binary, &last_variable_that_still_needs_to_become_integer_or_binary_index_recursive);
 
 		if (number_of_variables_needing_to_be_integer_or_binary_currently_integer_or_binary < number_of_variables_required_to_be_integer + number_of_variables_required_to_be_binary)
 		{
-			printf("BranchAndBoundMILPRecursiveLessOrGreaterThan: About to check if more depth is needed\n");
 			error_code = CheckIfMoreBranchAndBoundMILPRecursionIsNecessary(maximization_problem, number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size, tableau_max_size, number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, last_variable_that_still_needs_to_become_integer_or_binary_index_recursive, best_mixed_integer_optimal_value_double, best_mixed_integer_optimal_value, best_mixed_integer_variable_values, best_milp_error_code, recursion_level);
 		}
 		else
 		{
 			PrintOptimalResults(number_of_variables, (*tableau_matrix)[0][(*number_of_constraints)][0], (*tableau_matrix)[1][(*number_of_constraints)][0], (*basic_feasible_solution));
-			printf("BranchAndBoundMILPRecursiveLessOrGreaterThan: About to save variables since all requirements met!\n");
 			SaveBestMixedIntegerOptimalVariablesAndValues(maximization_problem, (*number_of_constraints), number_of_variables, (*basic_feasible_solution), (*tableau_matrix), best_mixed_integer_optimal_value_double, best_mixed_integer_optimal_value, best_mixed_integer_variable_values, best_milp_error_code);
 		}
 	}
@@ -2063,7 +2016,6 @@ int BranchAndBoundMILPRecursiveLessOrGreaterThan(int maximization_problem, unsig
 		printf("BranchAndBoundMILPRecursiveLessOrGreaterThan: Unbounded!\n");
 	}
 
-	printf("BranchAndBoundMILPRecursiveLessOrGreaterThan: About to reset counts and arrays!\n");
 	ResetBranchAndBoundMILPRecursiveCountsAndArrays(number_of_variables, branch_and_bound_state_old, tableau_current_size, number_of_constraints, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix);
 
 	return error_code;
@@ -2081,7 +2033,6 @@ int CheckIfMoreBranchAndBoundMILPRecursionIsNecessary(int maximization_problem, 
 			if ((double)(*tableau_matrix)[0][(*number_of_constraints)][0] / (*tableau_matrix)[1][(*number_of_constraints)][0] > (*best_mixed_integer_optimal_value_double))
 			{
 				/* Keep going down the rabbit hole */
-				printf("CheckIfMoreBranchAndBoundMILPRecursionIsNecessary: Going down rabbit hole more at current recursion_level = %d\n", recursion_level);
 				error_code = BranchAndBoundMILPRecursive(maximization_problem, number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size, tableau_max_size, number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, last_variable_that_still_needs_to_become_integer_or_binary_index_recursive, best_mixed_integer_optimal_value_double, best_mixed_integer_optimal_value, best_mixed_integer_variable_values, best_milp_error_code, recursion_level + 1);
 			}
 		}
@@ -2090,7 +2041,6 @@ int CheckIfMoreBranchAndBoundMILPRecursionIsNecessary(int maximization_problem, 
 			if (-(double)(*tableau_matrix)[0][(*number_of_constraints)][0] / (*tableau_matrix)[1][(*number_of_constraints)][0] < (*best_mixed_integer_optimal_value_double))
 			{
 				/* Keep going down the rabbit hole */
-				printf("CheckIfMoreBranchAndBoundMILPRecursionIsNecessary: Going down rabbit hole more at current recursion_level = %d\n", recursion_level);
 				error_code = BranchAndBoundMILPRecursive(maximization_problem, number_of_constraints, number_of_variables, number_of_slack_surplus_variables, number_of_artificial_variables, basic_variables, basic_feasible_solution, tableau_matrix, tableau_current_size, tableau_max_size, number_of_variables_required_to_be_integer, number_of_variables_required_to_be_binary, variable_special_requirements, last_variable_that_still_needs_to_become_integer_or_binary_index_recursive, best_mixed_integer_optimal_value_double, best_mixed_integer_optimal_value, best_mixed_integer_variable_values, best_milp_error_code, recursion_level + 1);
 			}
 		}
@@ -2148,20 +2098,6 @@ void SaveBestMixedIntegerOptimalVariablesAndValues(int maximization_problem, uns
 void ResetBranchAndBoundMILPRecursiveCountsAndArrays(unsigned int number_of_variables, struct BranchAndBoundState branch_and_bound_state_old, unsigned int *tableau_current_size, unsigned int *number_of_constraints, unsigned int *number_of_slack_surplus_variables, unsigned int *number_of_artificial_variables, unsigned int **basic_variables, long long ***basic_feasible_solution, long long ****tableau_matrix)
 {
 	unsigned int i, j, k;
-	
-	printf("ResetBranchAndBoundMILPRecursiveCountsAndArrays: BEFORE reset: basic_variables = \n");
-	for (i = 0; i < (*number_of_constraints); i++)
-	{
-		printf("%u\t", (*basic_variables)[i]);
-	} // end of i loop
-	printf("\n");
-	
-	printf("ResetBranchAndBoundMILPRecursiveCountsAndArrays: BEFORE reset: basic_variables_old = \n");
-	for (i = 0; i < branch_and_bound_state_old.number_of_constraints; i++)
-	{
-		printf("%u\t", branch_and_bound_state_old.basic_variables[i]);
-	} // end of i loop
-	printf("\n");
 
 	/* Reset counts */
 	tableau_current_size[0] = branch_and_bound_state_old.tableau_current_size[0];
@@ -2215,7 +2151,7 @@ int AddConstraint(unsigned int *number_of_constraints, unsigned int number_of_va
 		printf("\nAddConstraint: New constraint is x%u >= %lld at recursion level %u\n", last_variable_that_still_needs_to_become_integer_or_binary_index + 1, new_constraint_constant, recursion_level);
 	}
 
-	printf("AddConstraint: Tableau: Current = %u x %u & Max = %u x %u\n", tableau_current_size[0], tableau_current_size[1], tableau_max_size[0], tableau_max_size[1]);
+	printf("AddConstraint: Tableau: tableau_current_size = %u x %u & tableau_max_size = %u x %u\n", tableau_current_size[0], tableau_current_size[1], tableau_max_size[0], tableau_max_size[1]);
 
 	/* Increase matrix array size if needed */
 	if (tableau_current_size[0] + 2 > tableau_max_size[0]) // if need to realloc rows
@@ -2351,34 +2287,10 @@ int AddConstraint(unsigned int *number_of_constraints, unsigned int number_of_va
 
 	/* This function updates the basic feasible solution */
 	UpdateBasicFeasibleSolution(tableau_current_size[1] - 1, (*number_of_constraints), (*basic_variables), (*basic_feasible_solution), (*tableau_matrix));
-	
-	printf("AddConstraint: Tableau right BEFORE simplex: Current = %u x %u & Max = %u x %u\n", tableau_current_size[0], tableau_current_size[1], tableau_max_size[0], tableau_max_size[1]);
-	
-	printf("AddConstraint: tableau matrix right BEFORE simplex\n");
-	for (i = 0; i < tableau_current_size[0]; i++)
-	{
-		for (j = 0; j < tableau_current_size[1]; j++)
-		{
-			printf("%lf\t", (double)(*tableau_matrix)[0][i][j] / (*tableau_matrix)[1][i][j]);
-		} // end of j loop
-		printf("\n");
-	} // end of i loop
 
 	/* This function finds the optimal solution for the given variables and constraints */
 	error_code = SimplexAlgorithm((*number_of_constraints), number_of_variables, (*number_of_slack_surplus_variables), number_of_artificial_variables, (*basic_variables), (*basic_feasible_solution), (*tableau_matrix), tableau_current_size);
 	
-	printf("AddConstraint: Tableau right AFTER simplex: Current = %u x %u & Max = %u x %u\n", tableau_current_size[0], tableau_current_size[1], tableau_max_size[0], tableau_max_size[1]);
-	
-	printf("AddConstraint: tableau matrix right AFTER simplex\n");
-	for (i = 0; i < tableau_current_size[0]; i++)
-	{
-		for (j = 0; j < tableau_current_size[1]; j++)
-		{
-			printf("%lf\t", (double)(*tableau_matrix)[0][i][j] / (*tableau_matrix)[1][i][j]);
-		} // end of j loop
-		printf("\n");
-	} // end of i loop
-
 	return error_code;
 } // end of AddConstraint function
 
