@@ -1236,7 +1236,7 @@ void PrintInitialCounts(unsigned int number_of_constraints, unsigned int number_
 	printf("PrintInitialCounts: number_of_constraints = %u & number_of_variables = %u\n", number_of_constraints, number_of_variables);
 	printf("PrintInitialCounts: number_of_less_than_or_equal_to_constraints = %u, number_of_equal_to_constraints = %u, number_of_greater_than_or_equal_to_constraints = %u\n", number_of_less_than_or_equal_to_constraints, number_of_equal_to_constraints, number_of_greater_than_or_equal_to_constraints);
 	printf("PrintInitialCounts: number_of_slack_surplus_variables = %u & number_of_artificial_variables = %u\n", number_of_slack_surplus_variables, number_of_artificial_variables);
-	printf("PrintInitialCounts: tableau_current_size[0] = %u & tableau_current_size[0] = %u\n", tableau_current_size[0], tableau_current_size[1]);
+	printf("PrintInitialCounts: tableau_current_size[0] = %u & tableau_current_size[1] = %u\n", tableau_current_size[0], tableau_current_size[1]);
 	
 	return;
 } // end of PrintInitialCounts function
